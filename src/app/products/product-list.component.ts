@@ -1,14 +1,17 @@
 import { Component, OnInit } from "@angular/core";
 import { IProduct } from "./product";
+import { ProductService } from "./product.service";
 
 @Component({
     selector: "app-products",
     templateUrl: "./product-list.component.html",
     styleUrls: ["./product-list.component.css"],
+    providers: [ProductService]
 })
 export class ProductListComponent implements OnInit {
     pageTitle: string = "Product List";
     _listFilter: string;
+    errorMessage: string;
     get listFilter(): string {
         return this._listFilter;
     }
@@ -20,34 +23,19 @@ export class ProductListComponent implements OnInit {
     imageMargin: number = 2;
     showImage: boolean = false;
     filteredProducts: IProduct[];
-    products: IProduct[] = [
-        {
-            "productId": 2,
-            "productName": "Garden Cart",
-            "productCode": "GDN-0023",
-            "releaseDate": "March 18, 2019",
-            "description": "15 gallon capacity rolling garden",
-            "price": 32.99,
-            "starRating": 4.2,
-            "imageUrl": "assets/images/garden_cart.png"
-        },
-        {
-            "productId": 5,
-            "productName": "Hammer",
-            "productCode": "TBX-0048",
-            "releaseDate": "May 21, 2019",
-            "description": "Curved claw steel hammer",
-            "price": 8.9,
-            "starRating": 4.8,
-            "imageUrl": "assets/images/hammer.png" 
-        }
-        
-    ];
-    constructor() {
-        this.filteredProducts = this.products;
-        this.listFilter = 'cart';
+    products: IProduct[] = [];
+    constructor(private productService: ProductService) {
     }
-    ngOnInit(): void {}
+    ngOnInit(): void {
+        this.productService.getProducts().subscribe({
+            next: products => {
+                this.products = products;
+                this.filteredProducts = this.products;
+            },
+            error: err => this.errorMessage = err
+        });
+        
+    }
     toggleImage() : void {
         this.showImage = !this.showImage;
     }
@@ -56,5 +44,7 @@ export class ProductListComponent implements OnInit {
         return this.products.filter((product: IProduct) => 
             product.productName.toLocaleLowerCase().indexOf(filterBy) !== -1);
     }
-
+    onNotify(message: string): void{
+        this.pageTitle = "Product List: " + message;
+    }
 }
